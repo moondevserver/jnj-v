@@ -77,5 +77,6 @@ To add an exception for this directory, call:
 xgit -e make 
 
 # !! 추가 필요
+chmod 777 -R /app/sites
 git config --global --add safe.directory /app/sites/jnj-v
 ```
