@@ -6,7 +6,6 @@ import { extname } from 'path';
 import { headers as getHeaders } from 'next/headers';
 
 import { VIDEO_BASE_PATH } from '@/config'
-// const VIDEO_BASE_PATH = '/volume1/video';
 
 // 타입 정의
 interface ContentTypes {
@@ -46,14 +45,6 @@ export async function GET(
     const referer = headersList.get('referer');
     const origin = headersList.get('origin');
     
-    // if (!referer && !origin) {
-    //   return new Response('직접 접근이 불가능합니다.', { 
-    //     status: 403,
-    //     headers: {
-    //       'Content-Type': 'text/plain; charset=utf-8'
-    //     }
-    //   });
-    // }
 
     const filePath = path.join(VIDEO_BASE_PATH!, ...params.path);
     const ext = path.extname(filePath).toLowerCase();
@@ -71,29 +62,12 @@ export async function GET(
     const stat = fs.statSync(filePath);
     const headers = new Headers();
 
-    // 보안 헤더 설정
-    headers.set('Content-Security-Policy', "default-src 'self'");
-    headers.set('X-Content-Type-Options', 'nosniff');
-    headers.set('X-Frame-Options', 'SAMEORIGIN');
-    headers.set('Cross-Origin-Resource-Policy', 'same-origin');
-    headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
-    
-    // 캐시 제어
-    headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-    headers.set('Pragma', 'no-cache');
-    headers.set('Expires', '0');
-
     // Content-Type 설정
     if (contentTypes[ext]) {
       headers.set('Content-Type', contentTypes[ext]);
     } else {
       headers.set('Content-Type', 'application/octet-stream');
     }
-
-    // 다운로드 방지
-    headers.set('Content-Disposition', 'inline; filename="video.mp4"');
-    headers.set('accept-ranges', 'bytes');
-    headers.set('content-length', stat.size.toString());
 
     // Range 요청 처리
     const range = request.headers.get('range');

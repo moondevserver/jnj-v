@@ -2,6 +2,7 @@
 ## app
 
 ### home
+VIDEO_BASE_URL/
 
 ### category
 
@@ -9,6 +10,8 @@ VIDEO_BASE_URL/categories/604f1c9756c3676f1ed003c3
 
 
 ### lecture
+VIDEO_BASE_URL/classes/5e6258d71479d9790288e304/lectures/5e8dc1aff84b500af6230603
+
 
 
 ## api
