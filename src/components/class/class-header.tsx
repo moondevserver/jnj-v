@@ -11,9 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
-import { UserRole } from '@/types/auth'
 
 const GET_CATEGORIES = gql`
   query GetCategories {
@@ -39,51 +37,11 @@ interface CategoryData {
   }[]
 }
 
-// 역할별 뱃지 설정
-const roleBadges: Record<UserRole, { text: string, color: string }> = {
-  [UserRole.ADMIN]: { text: '1', color: 'bg-red-500' },
-  [UserRole.TEACHER]: { text: '2', color: 'bg-yellow-500' },
-  [UserRole.STUDENT]: { text: '3', color: 'bg-green-500' },
-  [UserRole.USER]: { text: '4', color: 'bg-gray-500' },
-}
-
-function UserAvatar({ user }: { user: Session['user'] }) {
-  const badge = user.role ? roleBadges[user.role] : undefined;
-  
-  console.log('User role:', user.role); // 디버깅용
-
-  return (
-    <div className="relative">
-      {user.image ? (
-        <Image
-          src={user.image}
-          alt={user.name || ''}
-          width={32}
-          height={32}
-          className="rounded-full"
-        />
-      ) : (
-        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-          <span className="text-sm font-medium">
-            {user.name?.[0] || '?'}
-          </span>
-        </div>
-      )}
-      {badge && (
-        <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full ${badge.color} text-white text-xs flex items-center justify-center font-bold ring-2 ring-background`}>
-          {badge.text}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export function ClassHeader() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const { data, loading, error } = useQuery<CategoryData>(GET_CATEGORIES)
   const [isOpen, setIsOpen] = useState(false)
-  const { data: session } = useSession()
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()
@@ -157,26 +115,6 @@ export function ClassHeader() {
                 />
               </div>
             </form>
-          </div>
-          <div className="flex items-center gap-4">
-            {session ? (
-              <div className="flex items-center gap-2">
-                <UserAvatar user={session.user} />
-                <button
-                  onClick={() => signOut()}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  로그아웃
-                </button>
-              </div>
-            ) : (
-              <Link 
-                href="/auth/signin" 
-                className="whitespace-nowrap text-sm font-medium bg-primary text-primary-foreground px-6 py-2 rounded-md min-w-[100px] text-center shrink-0"
-              >
-                로그인
-              </Link>
-            )}
           </div>
         </div>
       </div>
