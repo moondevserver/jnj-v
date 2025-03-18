@@ -7,11 +7,11 @@ import { UserRole } from '@/types/auth'
 import { findUserByEmail, findUserByProviderAccount, createUser, updateUser } from '@/lib/user'
 
 // 환경 변수 확인 로깅 - 여기에 추가
-console.log('Environment variables check:');
-console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
-console.log('GOOGLE_ID exists:', !!process.env.GOOGLE_ID);
-console.log('GOOGLE_SECRET exists:', !!process.env.GOOGLE_SECRET);
-console.log('NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET);
+// console.log('Environment variables check:');
+// console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
+// console.log('GOOGLE_ID exists:', !!process.env.GOOGLE_ID);
+// console.log('GOOGLE_SECRET exists:', !!process.env.GOOGLE_SECRET);
+// console.log('NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET);
 
 const handler = NextAuth({
   providers: [

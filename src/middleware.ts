@@ -8,6 +8,9 @@ const adminRoutes = ['/admin', '/admin/users', '/admin/settings'];
 const protectedRoutes = ['/dashboard', '/profile', '/settings'];
 const authRoutes = ['/auth/signin', '/auth/error'];
 
+// * admin 여부
+const isAdmin = (token: any) : boolean => token && token.role?.toLowerCase() === UserRole.ADMIN.toLowerCase()
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
@@ -16,6 +19,8 @@ export async function middleware(request: NextRequest) {
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
+
+  console.log(`#### token: ${JSON.stringify(token)} UserRole.ADMIN: ${UserRole.ADMIN}`)
   
   // 인증이 필요한 페이지에 대한 접근 제어
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
@@ -29,8 +34,7 @@ export async function middleware(request: NextRequest) {
   
   // 관리자 전용 페이지에 대한 접근 제어
   if (adminRoutes.some(route => pathname.startsWith(route))) {
-    if (!token || token.role !== UserRole.ADMIN) {
-      // 관리자가 아닌 사용자는 접근 거부 페이지로 리디렉션
+    if (!isAdmin(token)) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
   }
