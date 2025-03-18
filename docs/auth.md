@@ -1,3 +1,293 @@
+nextjs에서 회원 권한에 따라, page, api 의 접근을 제한하려고 합니다.
+회원 가입/로그인은 sns(google, apple, naver, kakao) 계정으로 가능하게 하고 싶어요.
+
+signin 의 page, ui 코드는 다음과 같아요. 아래의 파일들을 참고하여, 회원 가입/로그인/접근 권한 기능을 구현하는 구체적인 과정을 설명해주세요.
+
+
+> `/volume1/docker/frontend/nextjs/sites/jnj-v/src/app/auth/signin/page.tsx`
+
+```
+import { SignIn } from '@/components/auth/sign-in'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: '로그인',
+  description: '로그인 페이지',
+}
+
+export default function SignInPage() {
+  return <SignIn />
+} 
+```
+
+> `/volume1/docker/frontend/nextjs/sites/jnj-v/src/app/auth/error/page.tsx`
+
+```
+export default function AuthError() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-md space-y-8 p-8 text-center">
+        <h2 className="text-2xl font-bold text-red-600">로그인 오류</h2>
+        <p className="text-muted-foreground">
+          로그인 중 오류가 발생했습니다.
+        </p>
+        <div className="mt-4">
+          <a
+            href="/auth/signin"
+            className="text-sm text-primary hover:text-primary/80"
+          >
+            다시 로그인하기
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+} 
+```
+
+> `/volume1/docker/frontend/nextjs/sites/jnj-v/src/components/auth/sign-in.tsx`
+
+```
+'use client'
+
+import { signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
+
+export function SignIn() {
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
+
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-md space-y-8 rounded-lg border bg-card p-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold">로그인</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            소셜 계정으로 로그인하세요
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {/* 카카오 로그인 */}
+          <button
+            onClick={() => signIn('kakao', { callbackUrl })}
+            className="flex w-full items-center justify-center gap-3 rounded-md bg-[#FEE500] px-4 py-3 text-sm font-medium text-[#000000] hover:bg-[#FEE500]/90"
+          >
+            <Image
+              src="/images/kakao.svg"
+              alt="Kakao"
+              width={20}
+              height={20}
+            />
+            카카오로 시작하기
+          </button>
+
+          {/* 네이버 로그인 */}
+          <button
+            onClick={() => signIn('naver', { callbackUrl })}
+            className="flex w-full items-center justify-center gap-3 rounded-md bg-[#03C75A] px-4 py-3 text-sm font-medium text-white hover:bg-[#03C75A]/90"
+          >
+            <Image
+              src="/images/naver.svg"
+              alt="Naver"
+              width={20}
+              height={20}
+            />
+            네이버로 시작하기
+          </button>
+
+          {/* 구글 로그인 */}
+          <button
+            onClick={() => signIn('google', { callbackUrl })}
+            className="flex w-full items-center justify-center gap-3 rounded-md bg-white px-4 py-3 text-sm font-medium text-black hover:bg-gray-50 border"
+          >
+            <Image
+              src="/images/google.svg"
+              alt="Google"
+              width={20}
+              height={20}
+            />
+            Google로 시작하기
+          </button>
+
+          {/* Apple 로그인 */}
+          <button
+            onClick={() => signIn('apple', { callbackUrl })}
+            className="flex w-full items-center justify-center gap-3 rounded-md bg-black px-4 py-3 text-sm font-medium text-white hover:bg-black/90"
+          >
+            <Image
+              src="/images/apple.svg"
+              alt="Apple"
+              width={20}
+              height={20}
+            />
+            Apple로 시작하기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+} 
+```
+
+---
+
+> `/volume1/docker/frontend/nextjs/sites/jnj-v/src/app/api/auth/[...nextauth]/route.ts`
+
+```
+import NextAuth from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
+import NaverProvider from 'next-auth/providers/naver'
+import KakaoProvider from 'next-auth/providers/kakao'
+import AppleProvider from 'next-auth/providers/apple'
+import { loadJson } from 'jnu-abc'
+import { UserRole } from '@/types/auth'
+import path from 'path'
+
+const handler = NextAuth({
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_ID!,
+      clientSecret: process.env.GOOGLE_SECRET!,
+    }),
+    NaverProvider({
+      clientId: process.env.NAVER_CLIENT_ID!,
+      clientSecret: process.env.NAVER_CLIENT_SECRET!,
+    }),
+    KakaoProvider({
+      clientId: process.env.KAKAO_CLIENT_ID!,
+      clientSecret: process.env.KAKAO_CLIENT_SECRET!,
+      authorization: {
+        url: "https://kauth.kakao.com/oauth/authorize",
+        params: {
+          scope: "profile_nickname profile_image account_email"
+        }
+      },
+      token: {
+        url: "https://kauth.kakao.com/oauth/token",
+      },
+      userinfo: {
+        url: "https://kapi.kakao.com/v2/user/me",
+      },
+      profile(profile) {
+        console.log('Kakao Profile:', profile)
+        return {
+          id: profile.id.toString(),
+          name: profile.properties?.nickname || '',
+          email: profile.kakao_account?.email,
+          image: profile.properties?.profile_image,
+          role: UserRole.USER
+        }
+      }
+    }),
+    AppleProvider({
+      clientId: process.env.APPLE_ID!,
+      clientSecret: process.env.APPLE_SECRET!,
+    }),
+  ],
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  callbacks: {
+    async signIn({ user, account, profile }) {
+      try {
+        console.log('SignIn Callback - User:', user);
+        console.log('SignIn Callback - Account:', account);
+        console.log('SignIn Callback - Profile:', profile);
+        
+        if (account?.provider === 'kakao') {
+          const email = profile?.kakao_account?.email || user.email
+          console.log('Kakao SignIn - Email:', email);
+          
+          // users.json에서 사용자 정보 조회
+          const users = loadJson(`${process.env.DATA_ROOT_PATH}/users.json`)
+          const existingUser = users.users?.find((u: any) => u.email === email)
+          console.log('Kakao SignIn - Existing User:', existingUser);
+          
+          if (!existingUser) {
+            console.warn(`User not found in users.json: ${email}`)
+            return true // 기본적으로 로그인 허용
+          }
+          
+          return true
+        }
+        return true
+      } catch (error) {
+        console.error('Error in signIn callback:', error)
+        return true
+      }
+    },
+    async jwt({ token, account, profile, user }) {
+      try {
+        console.log('JWT Callback - Token:', token);
+        console.log('JWT Callback - Account:', account);
+        console.log('JWT Callback - Profile:', profile);
+        console.log('JWT Callback - User:', user);
+        
+        if (account?.provider === 'kakao') {
+          const email = profile?.kakao_account?.email || user.email
+          console.log('Kakao JWT - Email:', email);
+          
+          // users.json에서 사용자 정보 조회
+          const users = loadJson(`${process.env.DATA_ROOT_PATH}/users.json`)
+          const existingUser = users.users?.find((u: any) => u.email === email)
+          console.log('Kakao JWT - Existing User:', existingUser);
+          
+          // 사용자 권한 설정
+          token.role = existingUser?.role || UserRole.USER
+          token.id = existingUser?.id || user?.id || token.sub
+          token.email = email
+          token.name = profile?.properties?.nickname || user.name
+        }
+        return token
+      } catch (error) {
+        console.error('Error in jwt callback:', error)
+        token.role = UserRole.USER
+        return token
+      }
+    },
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id as string,
+          role: token.role as UserRole,
+        }
+      };
+    },
+  },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
+  logger: {
+    error(code, ...message) {
+      console.error('NextAuth Error:', code, message);
+    },
+    warn(code, ...message) {
+      console.warn('NextAuth Warning:', code, message);
+    },
+    debug(code, ...message) {
+      console.log('NextAuth Debug:', code, message);
+    },
+  },
+})
+
+export { handler as GET, handler as POST }
+```
+
+
+---
+우선 google 회원 가입/로그인부터 구현해주세요.
+
+
+===
+
 # 로그인 사용자만 파일 접근을 허용하는 스트리밍 API 수정 방법
 
 파일에 직접 접근했을 때 로그인되지 않은 사용자의 다운로드를 막기 위해 현재 코드를 수정해 보겠습니다. 주요 변경 사항은 인증 검증 로직을 추가하는 것입니다.

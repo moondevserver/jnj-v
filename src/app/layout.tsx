@@ -1,4 +1,5 @@
 import { ApolloWrapper } from '@/lib/apollo-provider'
+import { SessionProvider } from '@/components/providers/session-provider';
 import './globals.css'
 
 export const metadata = {
@@ -14,9 +15,11 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
+        <SessionProvider>
           <ApolloWrapper>
             {children}
           </ApolloWrapper>
+        </SessionProvider>
       </body>
     </html>
   )
